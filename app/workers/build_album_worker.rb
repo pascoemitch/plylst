@@ -1,7 +1,7 @@
 class BuildAlbumWorker
   include Sidekiq::Worker
 
-  sidekiq_options lock: :while_executing
+  sidekiq_options lock: :while_executing, on_conflict: :reject
 
   def perform(album_id)
     album = Album.find album_id
@@ -34,7 +34,9 @@ class BuildAlbumWorker
       release_date: date, 
       link: spotify_album.external_urls['spotify'], 
       popularity: spotify_album.popularity, 
-      album_type: album_type
+      album_type: album_type,
+      label: spotify_album.label,
+      last_checked_at: Time.now
     )
   end
 end

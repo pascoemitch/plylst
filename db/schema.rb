@@ -2,15 +2,15 @@
 # of editing this file, please use the migrations feature of Active Record to
 # incrementally modify your database, and then regenerate this schema definition.
 #
-# Note that this schema.rb definition is the authoritative source for your
-# database schema. If you need to create the application database on another
-# system, you should be using db:schema:load, not running all the migrations
-# from scratch. The latter is a flawed and unsustainable approach (the more migrations
-# you'll amass, the slower it'll run and the greater likelihood for issues).
+# This file is the source Rails uses to define your schema when running `rails
+# db:schema:load`. When creating a new database, `rails db:schema:load` tends to
+# be faster and is potentially less error prone than running all of your
+# migrations from scratch. Old migrations may fail to apply correctly if those
+# migrations use external dependencies or application code.
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2020_02_20_193458) do
+ActiveRecord::Schema.define(version: 2020_02_29_192441) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -26,9 +26,13 @@ ActiveRecord::Schema.define(version: 2020_02_20_193458) do
     t.string "album_type"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "label"
+    t.datetime "last_checked_at"
     t.index ["artist_id"], name: "index_albums_on_artist_id"
+    t.index ["label"], name: "index_albums_on_label"
+    t.index ["last_checked_at"], name: "index_albums_on_last_checked_at"
     t.index ["popularity"], name: "index_albums_on_popularity"
-    t.index ["spotify_id"], name: "index_albums_on_spotify_id"
+    t.index ["spotify_id"], name: "index_albums_on_spotify_id", unique: true
   end
 
   create_table "artists", force: :cascade do |t|
@@ -44,7 +48,7 @@ ActiveRecord::Schema.define(version: 2020_02_20_193458) do
     t.datetime "last_checked_at"
     t.index ["last_checked_at"], name: "index_artists_on_last_checked_at"
     t.index ["popularity"], name: "index_artists_on_popularity"
-    t.index ["spotify_id"], name: "index_artists_on_spotify_id"
+    t.index ["spotify_id"], name: "index_artists_on_spotify_id", unique: true
   end
 
   create_table "follows", force: :cascade do |t|
@@ -75,8 +79,11 @@ ActiveRecord::Schema.define(version: 2020_02_20_193458) do
     t.boolean "auto_update", default: true
     t.boolean "public", default: true
     t.string "catalog", default: "songs"
+    t.text "spotify_id"
+    t.text "meta_image"
     t.index ["catalog"], name: "index_playlists_on_catalog"
     t.index ["full_catalog"], name: "index_playlists_on_full_catalog"
+    t.index ["spotify_id"], name: "index_playlists_on_spotify_id"
     t.index ["user_id"], name: "index_playlists_on_user_id"
   end
 
@@ -133,7 +140,7 @@ ActiveRecord::Schema.define(version: 2020_02_20_193458) do
     t.index ["mode"], name: "index_tracks_on_mode"
     t.index ["popularity"], name: "index_tracks_on_popularity"
     t.index ["speechiness"], name: "index_tracks_on_speechiness"
-    t.index ["spotify_id"], name: "index_tracks_on_spotify_id"
+    t.index ["spotify_id"], name: "index_tracks_on_spotify_id", unique: true
     t.index ["tempo"], name: "index_tracks_on_tempo"
     t.index ["time_signature"], name: "index_tracks_on_time_signature"
     t.index ["valence"], name: "index_tracks_on_valence"

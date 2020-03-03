@@ -2,6 +2,14 @@ module ApplicationHelper
   def title(page_title)
     content_for(:title) { page_title }
   end
+
+  def description(page_description)
+    content_for(:description) { page_description }
+  end
+
+  def meta_image(meta_image)
+    content_for(:meta_image) { meta_image }
+  end
   
   def gravatar_url(user, size)
     id = user.email.present? ? user.email : user.id
@@ -101,7 +109,7 @@ module ApplicationHelper
   end
 
   def energy_value(value)
-    case value.to_i
+    case value.to_f
     when 0.0..0.250 then 0
     when 0.251..0.500 then 1
     when 0.501..0.750 then 2
@@ -110,7 +118,7 @@ module ApplicationHelper
   end
 
   def acoustic_value(value)
-    case value.to_i
+    case value.to_f
     when 0.0..0.250 then 0
     when 0.251..0.500 then 1
     when 0.501..0.750 then 2
@@ -119,7 +127,7 @@ module ApplicationHelper
   end
 
   def danceability_value(value)
-    case value.to_i
+    case value.to_f
     when 0.0..0.199 then 0
     when 0.2..0.399 then 1
     when 0.4..0.599 then 2
@@ -130,21 +138,21 @@ module ApplicationHelper
   end
 
   def valence_value(value)
-    case value.to_i
+    case value.to_f
     when 0.0..0.5 then 0
     when 0.501..1.0 then 1
     end
   end
 
   def instrumentalness_value(value)
-    case value.to_i
+    case value.to_f
     when 0.0..0.799 then 0
     when 0.8..1.0 then 1
     end
   end
 
   def speech_value(value)
-    case value.to_i
+    case value.to_f
     when 0.0..0.66 then 0
     when 0.667..1.0 then 1
     end

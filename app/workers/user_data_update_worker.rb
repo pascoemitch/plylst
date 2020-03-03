@@ -1,6 +1,8 @@
 class UserDataUpdateWorker
   include Sidekiq::Worker
 
+  sidekiq_options lock: :while_executing, on_conflict: :reject
+
   def perform(frequency = 'hourly')
     User.active.find_each do |user|
 

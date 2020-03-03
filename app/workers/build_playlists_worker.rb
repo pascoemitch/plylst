@@ -2,7 +2,7 @@ class BuildPlaylistsWorker
   include Sidekiq::Worker
   include ApplicationHelper
 
-  sidekiq_options :queue => :critical
+  sidekiq_options queue: :critical, lock: :while_executing, on_conflict: :reject
 
   def perform(user_id)
     user = User.find user_id
@@ -55,6 +55,8 @@ class BuildPlaylistsWorker
             existing_playlist.add_tracks!(group)
           end
         end
+
+        playlist.update_columns(spotify_id: existing_playlist.id)
       end
     end
   end

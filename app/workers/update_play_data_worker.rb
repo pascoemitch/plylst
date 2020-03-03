@@ -1,6 +1,8 @@
 class UpdatePlayDataWorker
   include Sidekiq::Worker
 
+  sidekiq_options lock: :while_executing, on_conflict: :reject
+
   def perform(user_id)
     user = User.find user_id
 

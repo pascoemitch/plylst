@@ -20,9 +20,17 @@
 //= require bootstrap-sprockets
 //= require extendext
 //= require dot
+//= require clipboard
 //= require_tree .
 
 $(document).on("turbolinks:load", function() {
+  var clipboard = new ClipboardJS(".copy-text");
+
+  clipboard.on("success", function(e) {
+    $(".copy-text span").text("Copied to clipboard!");
+    e.clearSelection();
+  });
+
   $("body").on("click", ".feedback_active", function(e) {
     $(".feedback .thanks").hide();
     $(".feedback .form").hide();
@@ -165,6 +173,15 @@ $(document).on("turbolinks:load", function() {
           unique: true,
           description:
             "Text the artist name contains. Use a pipe to include multiple artists: <code>Taylor Swift|Bob Dylan|Justin Bieber</code>."
+        },
+        {
+          id: "label",
+          label: "Label",
+          type: "string",
+          operators: ["contains"],
+          unique: true,
+          description:
+            "What label an album was released on. Use a pipe to include multiple labels: <code>Atlantic|Republic|Columbia</code>."
         },
         {
           id: "lyrics",

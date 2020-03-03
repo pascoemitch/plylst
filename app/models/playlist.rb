@@ -9,6 +9,10 @@ class Playlist < ApplicationRecord
 
   include Storext.model()
 
+  def open_spotify_link
+    "spotify://user/#{user.uid}/playlist/#{spotify_id}"
+  end
+
   def find_rule(rules, rule_name)
     rules.find{|r| r['id'] == rule_name} if rules.present?
   end
@@ -89,6 +93,11 @@ class Playlist < ApplicationRecord
       end
     end
 
+    # LABEL
+    find_rule(rules, 'label').try do |rule|
+      tracks = tracks.joins(:album).where('label ~* ?', rule['value'])
+    end
+
     # RELEASE DATE
     find_rule(rules, 'release_date').try do |rule|
       if rule['operator'] == 'less'
@@ -164,9 +173,9 @@ class Playlist < ApplicationRecord
     if catalog == 'songs'
       find_rule(rules, 'last_played_days_ago').try do |rule|
         if rule['operator'] == 'less'
-          tracks = tracks.where('follows.last_played_at < ?', rule['value'].days.ago).order('follows.last_played_at ASC')
+          tracks = tracks.where('follows.last_played_at > ?', rule['value'].days.ago).order('follows.last_played_at ASC')
         else
-          tracks = tracks.where('follows.last_played_at > ?', rule['value'].days.ago).order('follows.last_played_at DESC')
+          tracks = tracks.where('follows.last_played_at < ?', rule['value'].days.ago).order('follows.last_played_at DESC')
         end
       end
     end
@@ -421,6 +430,10 @@ class Playlist < ApplicationRecord
         tracks = tracks.order("follows.added_at DESC") if catalog == 'songs'
       when 'least_recently_added'
         tracks = tracks.order("follows.added_at ASC") if catalog == 'songs'
+      when 'most_recently_played'
+        tracks = tracks.order("follows.last_played_at DESC NULLS LAST") if catalog == 'songs'
+      when 'least_recently_played'
+        tracks = tracks.order("follows.last_played_at ASC") if catalog == 'songs'
       when 'release_date_desc'
         tracks = tracks.joins(:album).order("albums.release_date DESC")
       when 'release_date_asc'
@@ -440,6 +453,7 @@ class Playlist < ApplicationRecord
 
   def build_spotify_playlist
     BuildPlaylistsWorker.perform_async(self.user.id)
+    CreateMetaImageWorker.perform_async(self.id)
   end
 
   def translated_rules
@@ -457,7 +471,7 @@ class Playlist < ApplicationRecord
     end
 
     # Limt & Sorting
-    [['Random','random'], ['Most Popular', 'most_popular'], ['Least Popular', 'least_popular'], ['Most Played', 'most_often_played'], ['Least Played', 'least_often_played'], ['Most Recently Added', 'most_recently_added'], ['Least Recently Added', 'least_recently_added'], ['Release Date - Ascending', 'release_date_asc'], ['Release Date - Descending', 'release_date_desc']]
+    [['Random','random'], ['Most Popular', 'most_popular'], ['Least Popular', 'least_popular'], ['Most Played', 'most_often_played'], ['Least Played', 'least_often_played'], ['Most Recently Added', 'most_recently_added'], ['Least Recently Added', 'least_recently_added'], ['Most Recently Played', 'most_recently_played'], ['Least Recently Played', 'least_recently_played'], ['Release Date - Ascending', 'release_date_asc'], ['Release Date - Descending', 'release_date_desc']]
 
     sorting = case sort
     when 'random'
@@ -474,6 +488,10 @@ class Playlist < ApplicationRecord
       "by most recently added"
     when 'least_recently_added'
       "by least recently added"
+    when 'most_recently_played'
+      "by most recently played"
+    when 'least_recently_played'
+      "by least recently played"
     when 'release_date_asc'
       "by release date (ascending)"
     when 'release_date_desc'

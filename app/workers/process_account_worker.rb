@@ -1,6 +1,7 @@
 class ProcessAccountWorker
   include Sidekiq::Worker
-  sidekiq_options queue: 'critical'
+
+  sidekiq_options queue: :critical, lock: :while_executing, on_conflict: :reject
 
   def perform(user_id)
     user = User.find user_id
@@ -18,7 +19,8 @@ class ProcessAccountWorker
         ProcessTracksWorker.perform_async(user.id, n)
       end
       
-      ProcessAlbumsWorker.set(queue: :critical).perform_async(user.id)
+      ProcessAlbumsWorker.set(queue: :slow).perform_async(user.id)
+      ProcessPlaylistsWorker.set(queue: :slow).perform_async(user.id)
       BuildUserGenresWorker.set(queue: :critical).perform_in(30.seconds, user.id)
       UpdatePlayDataWorker.perform_in(60.seconds, user.id)
       RecentlyStreamedWorker.perform_in(60.seconds, user.id)

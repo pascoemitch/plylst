@@ -1,6 +1,8 @@
 class SaveTracksWorker
   include Sidekiq::Worker
 
+  sidekiq_options lock: :while_executing, on_conflict: :reject
+
   def perform(user_id, tracks_with_date, kind = 'added')
     # Find user these tracks are associated with, if a user_id is passed
     user = User.find user_id if user_id.present?
@@ -8,6 +10,7 @@ class SaveTracksWorker
 
     # Check if `tracks_with_date` is actually a multi-dimensional array (meaning it has dates)
     if tracks_with_date.all? { |e| e.kind_of? Array }
+      tracks_with_date = tracks_with_date.delete_if { |elem| elem[0] == nil }
       track_ids = tracks_with_date.map(&:first)
     else
       track_ids = tracks_with_date
@@ -20,7 +23,7 @@ class SaveTracksWorker
     # If there are no missing IDs, STOP THAT JUNK
     if missing_ids.present?
       # Make the Spotify API call to get all of the tracks
-      spotify_tracks = RSpotify::Track.find(missing_ids)
+      spotify_tracks = RSpotify::Track.find(missing_ids).compact
 
       # Looop through the returned tracks
       spotify_tracks.each do |spotify_track|
